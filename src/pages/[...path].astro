@@ -1,108 +1,162 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: import.meta.env.OPENAI_API_KEY,
+});
 
 const { path } = Astro.params;
 
-export const getStaticPaths = async () => {
-	return [];
-};
+// Format the path for better prompting
+const formattedPath = path?.replace(/[/-]/g, ' ').trim() || '404';
+
+// Generate content in Douglas Adams' style
+const completion = await openai.chat.completions.create({
+  model: "gpt-3.5-turbo",
+  messages: [
+    {
+      role: "system",
+      content: "You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Keep responses between 2-3 sentences."
+    },
+    {
+      role: "user",
+      content: `Write a Hitchhiker's Guide to the Galaxy style entry about "${formattedPath}". Make it humorous and slightly absurd, as if it's an entry in the actual Guide.`
+    }
+  ],
+  temperature: 0.9,
+  max_tokens: 150
+});
+
+const guideEntry = completion.choices[0].message.content;
 ---
 
 <Layout>
-	<div id="container">
-		<main>
-			<section id="hero">
-				<h1>DON'T PANIC</h1>
-				<p class="subtitle">Space seems to go on forever... but this page does not exist.</p>
-				<p class="guide-quote">"In the beginning the Universe was created. This has made a lot of people very angry and been widely regarded as a bad move."</p>
-				<section id="links">
-					<a class="button" href="/">Return to Earth</a>
-				</section>
-			</section>
-		</main>
-	</div>
+  <div id="stars"></div>
+  <div id="stars2"></div>
+  <div id="stars3"></div>
+  
+  <div id="container">
+    <main>
+      <section id="hero">
+        <h1>DON'T PANIC</h1>
+        <p class="subtitle">The Guide's Entry on: {formattedPath}</p>
+        <div class="guide-entry">
+          <p class="guide-text">{guideEntry}</p>
+          <p class="note">Note: The Hitchhiker's Guide to the Galaxy has this to say about lost travelers: "Don't Panic"</p>
+        </div>
+        <section id="links">
+          <a class="button" href="/">Return to Earth</a>
+        </section>
+      </section>
+    </main>
+  </div>
 </Layout>
 
 <style>
-	#container {
-		height: 100%;
-		padding: 2rem;
-	}
+  #container {
+    height: 100%;
+    padding: 2rem;
+  }
 
-	main {
-		height: 100%;
-		display: flex;
-		justify-content: center;
-		max-width: 800px;
-		margin: 0 auto;
-	}
+  main {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    max-width: 800px;
+    margin: 0 auto;
+  }
 
-	#hero {
-		display: flex;
-		align-items: center;
-		flex-direction: column;
-		justify-content: center;
-		text-align: center;
-		padding: 16px;
-	}
+  #hero {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 16px;
+  }
 
-	h1 {
-		font-size: 4rem;
-		margin: 0;
-		letter-spacing: 4px;
-		text-shadow: 0 0 20px var(--guide-green);
-		animation: pulse 2s infinite;
-	}
+  h1 {
+    font-size: 4rem;
+    margin: 0;
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px var(--guide-green);
+    animation: pulse 2s infinite;
+  }
 
-	@keyframes pulse {
-		0% { text-shadow: 0 0 20px var(--guide-green); }
-		50% { text-shadow: 0 0 40px var(--guide-green); }
-		100% { text-shadow: 0 0 20px var(--guide-green); }
-	}
+  @keyframes pulse {
+    0% { text-shadow: 0 0 20px var(--guide-green); }
+    50% { text-shadow: 0 0 40px var(--guide-green); }
+    100% { text-shadow: 0 0 20px var(--guide-green); }
+  }
 
-	.subtitle {
-		font-size: 1.5rem;
-		margin: 1rem 0;
-		opacity: 0.8;
-	}
+  .subtitle {
+    font-size: 1.5rem;
+    margin: 1rem 0;
+    opacity: 0.8;
+  }
 
-	.guide-quote {
-		font-style: italic;
-		opacity: 0.6;
-		max-width: 600px;
-		margin: 0 0 2rem;
-	}
+  .guide-quote {
+    font-style: italic;
+    opacity: 0.6;
+    max-width: 600px;
+    margin: 0 0 2rem;
+  }
 
-	#links {
-		display: flex;
-		gap: 16px;
-	}
+  #links {
+    display: flex;
+    gap: 16px;
+  }
 
-	.button {
-		display: flex;
-		align-items: center;
-		padding: 12px 24px;
-		color: #000;
-		background: var(--guide-green);
-		text-decoration: none;
-		border-radius: 4px;
-		font-weight: bold;
-		transition: all 0.2s;
-	}
+  .button {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    color: #000;
+    background: var(--guide-green);
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: all 0.2s;
+  }
 
-	.button:hover {
-		background: #fff;
-		box-shadow: 0 0 20px var(--guide-green);
-		transform: scale(1.05);
-	}
+  .button:hover {
+    background: #fff;
+    box-shadow: 0 0 20px var(--guide-green);
+    transform: scale(1.05);
+  }
 
-	@media screen and (max-width: 768px) {
-		h1 {
-			font-size: 3rem;
-		}
+  .guide-entry {
+    background: rgba(37, 248, 142, 0.1);
+    border: 1px solid var(--guide-green);
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 2rem 0;
+    max-width: 600px;
+    text-align: left;
+    backdrop-filter: blur(5px);
+  }
 
-		.guide-quote {
-			font-size: 0.9rem;
-		}
-	}
+  .guide-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+  }
+
+  .note {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    font-style: italic;
+    margin: 0;
+  }
+
+  @media screen and (max-width: 768px) {
+    h1 {
+      font-size: 3rem;
+    }
+
+    .guide-quote {
+      font-size: 0.9rem;
+    }
+  }
 </style>
