@@ -1,0 +1,108 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const { path } = Astro.params;
+
+export const getStaticPaths = async () => {
+	return [];
+};
+---
+
+<Layout>
+	<div id="container">
+		<main>
+			<section id="hero">
+				<h1>DON'T PANIC</h1>
+				<p class="subtitle">Space seems to go on forever... but this page does not exist.</p>
+				<p class="guide-quote">"In the beginning the Universe was created. This has made a lot of people very angry and been widely regarded as a bad move."</p>
+				<section id="links">
+					<a class="button" href="/">Return to Earth</a>
+				</section>
+			</section>
+		</main>
+	</div>
+</Layout>
+
+<style>
+	#container {
+		height: 100%;
+		padding: 2rem;
+	}
+
+	main {
+		height: 100%;
+		display: flex;
+		justify-content: center;
+		max-width: 800px;
+		margin: 0 auto;
+	}
+
+	#hero {
+		display: flex;
+		align-items: center;
+		flex-direction: column;
+		justify-content: center;
+		text-align: center;
+		padding: 16px;
+	}
+
+	h1 {
+		font-size: 4rem;
+		margin: 0;
+		letter-spacing: 4px;
+		text-shadow: 0 0 20px var(--guide-green);
+		animation: pulse 2s infinite;
+	}
+
+	@keyframes pulse {
+		0% { text-shadow: 0 0 20px var(--guide-green); }
+		50% { text-shadow: 0 0 40px var(--guide-green); }
+		100% { text-shadow: 0 0 20px var(--guide-green); }
+	}
+
+	.subtitle {
+		font-size: 1.5rem;
+		margin: 1rem 0;
+		opacity: 0.8;
+	}
+
+	.guide-quote {
+		font-style: italic;
+		opacity: 0.6;
+		max-width: 600px;
+		margin: 0 0 2rem;
+	}
+
+	#links {
+		display: flex;
+		gap: 16px;
+	}
+
+	.button {
+		display: flex;
+		align-items: center;
+		padding: 12px 24px;
+		color: #000;
+		background: var(--guide-green);
+		text-decoration: none;
+		border-radius: 4px;
+		font-weight: bold;
+		transition: all 0.2s;
+	}
+
+	.button:hover {
+		background: #fff;
+		box-shadow: 0 0 20px var(--guide-green);
+		transform: scale(1.05);
+	}
+
+	@media screen and (max-width: 768px) {
+		h1 {
+			font-size: 3rem;
+		}
+
+		.guide-quote {
+			font-size: 0.9rem;
+		}
+	}
+</style>
