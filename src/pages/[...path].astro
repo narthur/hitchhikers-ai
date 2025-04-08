@@ -17,7 +17,7 @@ const completion = await openai.chat.completions.create({
   messages: [
     {
       role: "system",
-      content: "You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Keep responses between 2-3 sentences."
+      content: "You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Keep responses between 3-4 paragraphs."
     },
     {
       role: "user",
@@ -25,7 +25,7 @@ const completion = await openai.chat.completions.create({
     }
   ],
   temperature: 0.9,
-  max_tokens: 150
+  max_tokens: 500
 });
 
 const guideEntry = completion.choices[0].message.content;
