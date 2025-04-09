@@ -1,6 +1,37 @@
-<div id="stars"></div>
-<div id="stars2"></div>
-<div id="stars3"></div>
+---
+import { marked } from 'marked';
+
+// Get the latest entry from KV store
+const keys = await Astro.locals.runtime.env.ARTICLES.list();
+let latestEntry = null;
+
+if (keys.keys.length > 0) {
+  // Sort by metadata.uploaded (most recent first)
+  const sortedKeys = keys.keys.sort((a: any, b: any) => {
+    const aTime = a.metadata?.uploaded || 0;
+    const bTime = b.metadata?.uploaded || 0;
+    return bTime - aTime;
+  });
+
+  // Get the most recent entry
+  const latestKey = sortedKeys[0];
+  if (latestKey?.name) {
+    const fullEntry = await Astro.locals.runtime.env.ARTICLES.get(latestKey.name, "text");
+    if (fullEntry) {
+      // Parse markdown to get just the text content
+      const parsedHtml = marked(fullEntry);
+      // Get first paragraph by finding content between first <p> tags
+      const match = parsedHtml.match(/<p>(.*?)<\/p>/);
+      const firstParagraph = match ? match[1] : '';
+      
+      latestEntry = {
+        text: firstParagraph,
+        path: latestKey.name
+      };
+    }
+  }
+}
+---
 
 <div id="container">
 	<main>
@@ -20,14 +51,21 @@
 					<span class="blink">&gt;</span>
 					<span>Search the Guide</span>
 				</a>
-				<a href="/deep-thought" class="button secondary-action">Ask Deep Thought</a>
+				<a href="/random" class="button secondary-action">Random Article</a>
 			</section>
 
 			<div id="news" class="box secondary-content">
 				<h2>Latest Entry</h2>
-				<p>
-					"The Encyclopedia Galactica defines AI as 'silicon-based intelligence that mostly doesn't try to take over the universe.' The Hitchhiker's Guide has this to say: 'Mostly Harmless.'"
-				</p>
+				{latestEntry ? (
+					<div class="latest-entry">
+						<p set:html={latestEntry.text} />
+						<a href={latestEntry.path} class="read-more">Read full article →</a>
+					</div>
+				) : (
+					<p>
+						"The Encyclopedia Galactica defines AI as 'silicon-based intelligence that mostly doesn't try to take over the universe.' The Hitchhiker's Guide has this to say: 'Mostly Harmless.'"
+					</p>
+				)}
 				<p class="note">
 					Note: The Guide is slightly cheaper than the Encyclopedia Galactica and has the words "DON'T PANIC" inscribed in large, friendly letters on its cover.
 				</p>
@@ -239,6 +277,41 @@
 		font-style: italic;
 		padding-top: 1.2rem;
 		border-top: 1px solid rgba(37, 248, 142, 0.2);
+	}
+
+	.latest-entry {
+		font-size: 1.1rem;
+		line-height: 1.6;
+	}
+
+	.latest-entry :global(img) {
+		display: none;
+	}
+
+	.latest-entry :global(a) {
+		color: var(--guide-green);
+		text-decoration: none;
+		position: relative;
+		transition: all 0.2s;
+	}
+
+	.latest-entry :global(a:hover) {
+		text-shadow: 0 0 10px var(--guide-green);
+	}
+
+	.read-more {
+		display: block;
+		margin-top: 1rem;
+		color: var(--guide-green);
+		text-decoration: none;
+		font-size: 0.9rem;
+		opacity: 0.8;
+		transition: all 0.2s;
+	}
+
+	.read-more:hover {
+		opacity: 1;
+		text-shadow: 0 0 10px var(--guide-green);
 	}
 
 	@media screen and (max-width: 768px) {
