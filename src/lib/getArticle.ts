@@ -45,7 +45,7 @@ async function getArticleImage(
   }
 
   const image = await openai.createImage(
-    `Absurd and humorous image illustrating "${formattedPath}" for the Hitchhiker's Guide to the Galaxy. Do not include any text in the image.`
+    `Absurd and humorous image illustrating "${formattedPath}". Focus on visual details and symbolism. Do not include any text in the image.`
   );
 
   return `<img src="data:image/png;base64,${image}" alt="${formattedPath}" width="200" height="200" />`;
