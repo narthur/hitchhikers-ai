@@ -1,7 +1,19 @@
 ---
 import { getLatestArticle } from '../lib/getLatestArticle';
 
-const latestEntry = await getLatestArticle(Astro.locals.runtime?.env?.ARTICLES);
+let articleCount = 0;
+let latestEntry = null;
+
+try {
+  const articles = Astro.locals.runtime?.env?.ARTICLES;
+  if (articles) {
+    const keys = await articles.list();
+    articleCount = keys.keys.length;
+    latestEntry = await getLatestArticle(articles);
+  }
+} catch (error) {
+  console.error('Error fetching article data:', error);
+}
 ---
 
 <div id="container">
@@ -12,6 +24,9 @@ const latestEntry = await getLatestArticle(Astro.locals.runtime?.env?.ARTICLES);
 
 		<section id="hero">
 			<h1>DON'T PANIC</h1>
+			{articleCount > 0 && (
+				<p class="article-count">Currently documenting {articleCount} improbable entries across the galaxy</p>
+			)}
 			<section id="links">
 				<a href="/search" class="button search-button primary-action">
 					<span class="blink">&gt;</span>
@@ -86,6 +101,15 @@ const latestEntry = await getLatestArticle(Astro.locals.runtime?.env?.ARTICLES);
 		text-shadow: 0 0 30px var(--guide-green);
 		animation: pulse 2s infinite;
 		font-weight: 900;
+	}
+
+	.article-count {
+		font-size: 1.2rem;
+		margin: 0;
+		opacity: 0.8;
+		color: var(--guide-green);
+		font-style: italic;
+		text-shadow: 0 0 10px var(--guide-green);
 	}
 
 	@keyframes pulse {
@@ -293,6 +317,10 @@ const latestEntry = await getLatestArticle(Astro.locals.runtime?.env?.ARTICLES);
 		h1 {
 			font-size: 4rem;
 			letter-spacing: 4px;
+		}
+
+		.article-count {
+			font-size: 1rem;
 		}
 
 		.subtitle {
