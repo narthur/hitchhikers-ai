@@ -3,14 +3,22 @@ import { type APIRoute } from 'astro';
 
 export const prerender = false;
 
-// Get all article keys and redirect to a random one
-const keys = await Astro.locals.runtime.env.ARTICLES.list();
-const randomKey = keys.keys[Math.floor(Math.random() * keys.keys.length)];
+try {
+  const articles = Astro.locals.runtime?.env?.ARTICLES;
+  if (articles) {
+    // Get all article keys and redirect to a random one
+    const keys = await articles.list();
+    const randomKey = keys.keys[Math.floor(Math.random() * keys.keys.length)];
 
-// If we have articles, redirect to a random one, otherwise go to home
-if (randomKey?.name) {
-  return Astro.redirect(`/${randomKey.name}`);
-} else {
-  return Astro.redirect('/');
+    // If we have articles, redirect to a random one, otherwise go to home
+    if (randomKey?.name) {
+      return Astro.redirect(`/${randomKey.name}`);
+    }
+  }
+} catch (error) {
+  console.error('Error fetching random article:', error);
 }
+
+// Default to home page if anything fails
+return Astro.redirect('/');
 ---
