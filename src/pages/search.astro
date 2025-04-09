@@ -1,22 +1,16 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getSearchResults } from '../lib/getSearchResults';
 
 const query = Astro.url.searchParams.get('q') || '';
-const renderedResults = await getSearchResults(query, Astro.locals.runtime.env.SEARCHES, Astro.locals.runtime.env.OPENAI_API_KEY, Astro.locals.runtime.env.TOKEN_USAGE);
 ---
 
 <Layout>
-  <div id="stars"></div>
-  <div id="stars2"></div>
-  <div id="stars3"></div>
-  
   <div id="container">
     <main>
       <section id="hero">
         <h1>DON'T PANIC</h1>
         <div class="search-container">
-          <form action="/search" method="get" class="search-form">
+          <form id="search-form" class="search-form">
             <input 
               type="text" 
               name="q" 
@@ -28,17 +22,88 @@ const renderedResults = await getSearchResults(query, Astro.locals.runtime.env.S
           </form>
         </div>
 
-        {query && (
-          <div class="results-container">
-            <h2>Guide Entries Related to "{query}"</h2>
-            <div class="search-results" set:html={renderedResults} />
-            <p class="note">Note: The Hitchhiker's Guide to the Galaxy's search algorithm is powered by the Infinite Improbability Drive, results may vary wildly across parallel universes.</p>
+        <div id="results-container" class="results-container">
+          <div id="loading" class="loading hidden">
+            <div class="loading-text">
+              <span class="blink">&gt;</span> Computing search probabilities...
+            </div>
+            <div class="loading-subtext">Please wait while the Guide consults its quantum processors</div>
           </div>
-        )}
+
+          <div id="results" class="search-results hidden"></div>
+          
+          <div id="error" class="error hidden">
+            <p>The Guide seems to be experiencing technical difficulties. Please try again later.</p>
+            <p class="note">Error Code: SEARCH_IMPROBABILITY_OVERFLOW</p>
+          </div>
+
+          <p class="note">Note: The Hitchhiker's Guide to the Galaxy's search algorithm is powered by the Infinite Improbability Drive, results may vary wildly across parallel universes.</p>
+        </div>
       </section>
     </main>
   </div>
 </Layout>
+
+<script>
+  const form = document.getElementById('search-form') as HTMLFormElement;
+  const loading = document.getElementById('loading');
+  const results = document.getElementById('results');
+  const error = document.getElementById('error');
+  const input = form?.querySelector('input[name="q"]') as HTMLInputElement;
+
+  // Show initial results if we have a query
+  if (input?.value) {
+    performSearch(input.value);
+  }
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const query = input?.value || '';
+    
+    // Update URL without reloading
+    const url = new URL(window.location.href);
+    url.searchParams.set('q', query);
+    window.history.pushState({}, '', url);
+
+    performSearch(query);
+  });
+
+  async function performSearch(query: string) {
+    if (!loading || !results || !error) return;
+
+    // Reset state
+    results.classList.add('hidden');
+    error.classList.add('hidden');
+    
+    if (!query.trim()) {
+      loading.classList.add('hidden');
+      return;
+    }
+
+    // Show loading
+    loading.classList.remove('hidden');
+
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) throw new Error(data.error);
+      
+      results.innerHTML = data.content;
+      results.classList.remove('hidden');
+      loading.classList.add('hidden');
+    } catch (e) {
+      console.error('Error performing search:', e);
+      error.classList.remove('hidden');
+      loading.classList.add('hidden');
+    }
+  }
+</script>
 
 <style>
   #container {
@@ -134,6 +199,38 @@ const renderedResults = await getSearchResults(query, Astro.locals.runtime.env.S
     text-align: left;
   }
 
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+
+  .loading-text {
+    font-size: 1.2rem;
+    color: var(--guide-green);
+  }
+
+  .loading-subtext {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    font-style: italic;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .blink {
+    animation: blink 1s infinite;
+    margin-right: 0.5rem;
+    display: inline-block;
+  }
+
   .search-results {
     background: rgba(37, 248, 142, 0.1);
     border: 1px solid var(--guide-green);
@@ -202,12 +299,33 @@ const renderedResults = await getSearchResults(query, Astro.locals.runtime.env.S
     line-height: 1.4;
   }
 
+  .error {
+    text-align: center;
+    color: var(--guide-green);
+    padding: 2rem;
+    margin: 2rem 0;
+    background: rgba(37, 248, 142, 0.05);
+    border: 1px solid var(--guide-green-25);
+    border-radius: 8px;
+  }
+
+  .error .note {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    font-style: italic;
+    margin-top: 1rem;
+  }
+
   .note {
     font-size: 0.9rem;
     opacity: 0.8;
     font-style: italic;
     text-align: center;
-    margin: 0;
+    margin: 1rem 0 0;
+  }
+
+  .hidden {
+    display: none !important;
   }
 
   @media (max-width: 768px) {
