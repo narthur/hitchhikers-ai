@@ -96,6 +96,12 @@ export async function getArticle(
   urlPath: string
 ) {
   const openai = new RateLimitedOpenAI(apiKey, tokenUsage);
+  const isSafe = await openai.isSafe(urlPath);
+
+  if (!isSafe) {
+    throw new Error("This topic is not safe for work.");
+  }
+
   const formattedPath = urlPath?.replace(/[/-]/g, " ").trim() || "404";
   const cachedEntry = await articles.get(urlPath || "404", "text");
 

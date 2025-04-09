@@ -1,52 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { marked } from 'marked';
-import { RateLimitedOpenAI } from '../lib/openai';
-
-const openai = new RateLimitedOpenAI(
-  Astro.locals.runtime.env.OPENAI_API_KEY,
-  Astro.locals.runtime.env.TOKEN_USAGE
-);
+import { getSearchResults } from '../lib/getSearchResults';
 
 const query = Astro.url.searchParams.get('q') || '';
-
-let searchResults = '';
-
-if (query) {
-  // Try to get cached search results first
-  const cachedResults = await Astro.locals.runtime.env.SEARCHES.get(query, 'text');
-
-  if (cachedResults) {
-    searchResults = cachedResults;
-  } else {
-    // Generate new search results if not cached
-    const completion = await openai.createChatCompletion([
-      {
-        role: "system",
-        content: "You are the Hitchhiker's Guide to the Galaxy's search engine. Generate 5-7 search results in markdown format. Each result should be a list item with a made-up but plausible article title as a link, followed by a brief, witty description in Douglas Adams' style. Make the results absurd and humorous while being loosely related to the search query. IMPORTANT: Each link MUST have a proper URL path starting with a forward slash, e.g. '/article-name'. Do NOT use '#' symbols or other invalid URL characters."
-      },
-      {
-        role: "user",
-        content: `Generate Hitchhiker's Guide to the Galaxy style search results for: "${query}". Each result MUST follow this exact format:
-- [Title of the Article](/kebab-case-url-path) - Brief, witty description
-
-Example:
-- [The Infinite Tea Machine](/infinite-tea-machine) - A device that produces an endless stream of tea, much to the annoyance of its inventor who preferred coffee.`
-      }
-    ]);
-
-    const content = completion.choices[0].message.content || '';
-    
-    // Only cache if it's not a limit exceeded response
-    if (!content.includes("currently overloaded with requests")) {
-      await Astro.locals.runtime.env.SEARCHES.put(query, content);
-    }
-    
-    searchResults = content;
-  }
-}
-
-const renderedResults = searchResults ? marked(searchResults) : '';
+const renderedResults = await getSearchResults(query, Astro.locals.runtime.env.SEARCHES, Astro.locals.runtime.env.OPENAI_API_KEY, Astro.locals.runtime.env.TOKEN_USAGE);
 ---
 
 <Layout>

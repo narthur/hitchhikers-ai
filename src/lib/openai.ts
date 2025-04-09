@@ -155,4 +155,12 @@ export class RateLimitedOpenAI {
       clearTimeout(timeoutId);
     }
   }
+
+  async isSafe(input: string) {
+    const completion = await this.openai.moderations.create({
+      input,
+    });
+
+    return !completion.results[0].flagged;
+  }
 }
