@@ -3,6 +3,26 @@ import Layout from '../layouts/Layout.astro';
 
 const { path } = Astro.params;
 const formattedPath = path?.replace(/[/-]/g, ' ').trim() || '404';
+
+// Get 3 random articles for recommendations
+let recommendations: { path: string; title: string }[] = [];
+try {
+  const articles = Astro.locals.runtime?.env?.ARTICLES;
+  if (articles) {
+    const keys: {keys: {name: string}[]} = await articles.list();
+    const shuffled = keys.keys
+      .filter(key => key.name !== path) // Don't recommend current article
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 4);
+
+    recommendations = shuffled.map(key => ({
+      path: key.name,
+      title: key.name.replace(/[/-]/g, " ").trim(),
+    }));
+  }
+} catch (error) {
+  console.error('Error fetching recommendations:', error);
+}
 ---
 
 <Layout>
@@ -28,6 +48,21 @@ const formattedPath = path?.replace(/[/-]/g, ' ').trim() || '404';
             <p class="note">Error Code: IMPROBABILITY_OVERFLOW</p>
           </div>
         </div>
+
+        {recommendations.length > 0 && (
+          <div class="recommendations">
+            <h2>Other Improbable Entries</h2>
+            <div class="recommendation-grid">
+              {recommendations.map(rec => (
+                <a href={`/${rec.path}`} class="recommendation">
+                  <span class="blink">&gt;</span>
+                  {rec.title}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         <section id="links">
           <a class="button" href="/">Return to Earth</a>
         </section>
@@ -251,6 +286,55 @@ const formattedPath = path?.replace(/[/-]/g, ' ').trim() || '404';
     margin-top: 1rem;
   }
 
+  .recommendations {
+    width: 100%;
+    max-width: 600px;
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: rgba(37, 248, 142, 0.05);
+    border: 1px solid var(--guide-green-25);
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+  }
+
+  .recommendations h2 {
+    font-size: 1.4rem;
+    margin: 0 0 1.5rem;
+    color: var(--guide-green);
+    text-shadow: 0 0 10px var(--guide-green);
+  }
+
+  .recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .recommendation {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    color: var(--guide-green);
+    text-decoration: none;
+    background: rgba(37, 248, 142, 0.1);
+    border: 1px solid var(--guide-green-25);
+    border-radius: 4px;
+    transition: all 0.2s;
+    text-transform: capitalize;
+  }
+
+  .recommendation:hover {
+    background: rgba(37, 248, 142, 0.2);
+    border-color: var(--guide-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 248, 142, 0.2);
+  }
+
+  .recommendation .blink {
+    font-size: 0.8em;
+    opacity: 0.8;
+  }
+
   .hidden {
     display: none;
   }
@@ -260,9 +344,13 @@ const formattedPath = path?.replace(/[/-]/g, ' ').trim() || '404';
       font-size: 2rem;
     }
 
-    .guide-entry {
+    .guide-entry, .recommendations {
       margin: 0 1rem;
       width: calc(100% - 2rem);
+    }
+
+    .recommendation-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
