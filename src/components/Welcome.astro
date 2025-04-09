@@ -41,11 +41,6 @@ if (keys.keys.length > 0) {
 
 		<section id="hero">
 			<h1>DON'T PANIC</h1>
-			<p class="subtitle">The Hitchhiker's Guide has this to say about artificial intelligence:</p>
-			<div class="guide-entry primary-content">
-				<p class="quote">"Space," it says, "is big. Really big. You just won't believe how vastly, hugely, mind-bogglingly big it is." But compared to the exponential growth of artificial intelligence, space seems rather cozy and well-defined.</p>
-			</div>
-			
 			<section id="links">
 				<a href="/search" class="button search-button primary-action">
 					<span class="blink">&gt;</span>
@@ -53,24 +48,24 @@ if (keys.keys.length > 0) {
 				</a>
 				<a href="/random" class="button secondary-action">Random Article</a>
 			</section>
-
-			<div id="news" class="box secondary-content">
-				<h2>Latest Entry</h2>
-				{latestEntry ? (
-					<div class="latest-entry">
-						<p set:html={latestEntry.text} />
-						<a href={latestEntry.path} class="read-more">Read full article →</a>
-					</div>
-				) : (
-					<p>
-						"The Encyclopedia Galactica defines AI as 'silicon-based intelligence that mostly doesn't try to take over the universe.' The Hitchhiker's Guide has this to say: 'Mostly Harmless.'"
-					</p>
-				)}
-				<p class="note">
-					Note: The Guide is slightly cheaper than the Encyclopedia Galactica and has the words "DON'T PANIC" inscribed in large, friendly letters on its cover.
-				</p>
-			</div>
 		</section>
+
+		<div id="news" class="box secondary-content">
+			<h2>Latest Entry</h2>
+			{latestEntry ? (
+				<div class="latest-entry">
+					<p set:html={latestEntry.text} />
+					<a href={latestEntry.path} class="read-more">Read full article →</a>
+				</div>
+			) : (
+				<p>
+					"The Encyclopedia Galactica defines AI as 'silicon-based intelligence that mostly doesn't try to take over the universe.' The Hitchhiker's Guide has this to say: 'Mostly Harmless.'"
+				</p>
+			)}
+			<p class="note">
+				Note: The Guide is slightly cheaper than the Encyclopedia Galactica and has the words "DON'T PANIC" inscribed in large, friendly letters on its cover.
+			</p>
+		</div>
 	</main>
 </div>
 
@@ -110,6 +105,7 @@ if (keys.keys.length > 0) {
 		padding: 16px;
 		width: 100%;
 		gap: 2rem;
+		min-height: 50vh;
 	}
 
 	h1 {
