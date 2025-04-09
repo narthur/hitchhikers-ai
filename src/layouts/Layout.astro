@@ -1,3 +1,7 @@
+---
+import Navigation from '../components/Navigation.astro';
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
@@ -11,7 +15,10 @@
 		<title>The Hitchhiker's Guide to AI</title>
 	</head>
 	<body>
-		<slot />
+		<Navigation />
+		<div class="content">
+			<slot />
+		</div>
 	</body>
 </html>
 
@@ -32,5 +39,10 @@
 
 	* {
 		box-sizing: border-box;
+	}
+
+	.content {
+		padding-top: 4rem;
+		min-height: 100%;
 	}
 </style>
