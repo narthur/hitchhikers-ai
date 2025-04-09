@@ -38,17 +38,29 @@ async function getArticleText(
 
 async function getArticleImage(
   openai: RateLimitedOpenAI,
-  formattedPath: string
+  formattedPath: string,
+  articleText: string
 ) {
   if (await openai.didExceedImageLimit()) {
     return null;
   }
 
-  const image = await openai.createImage(
-    `Absurd and humorous image illustrating "${formattedPath}". Focus on visual details and symbolism. Do not include any text in the image.`
-  );
+  const promptCompletion = await openai.createChatCompletion([
+    {
+      role: "system",
+      content: "You are an expert at creating image generation prompts. Given an article from the Hitchhiker's Guide to the Galaxy, create a single vivid, detailed prompt that captures the most interesting visual elements. Focus on concrete visual details, avoid abstract concepts, and do not include any text elements in the image description. Keep the prompt under 100 words and make it quirky and memorable in Douglas Adams' style."
+    },
+    {
+      role: "user",
+      content: `Create an image generation prompt for this Guide entry about "${formattedPath}":\n\n${articleText}`
+    }
+  ]);
 
-  return `<img src="data:image/png;base64,${image}" alt="${formattedPath}" width="200" height="200" />`;
+  const imagePrompt = promptCompletion.choices[0].message.content || 
+    `Absurd and humorous image illustrating "${formattedPath}" in the style of the Hitchhiker's Guide to the Galaxy. Focus on visual details and symbolism. Do not include any text.`;
+
+  const image = await openai.createImage(imagePrompt);
+  return image ? `<img src="data:image/png;base64,${image}" alt="${formattedPath}" width="200" height="200" />` : null;
 }
 
 export async function getArticle(
@@ -69,10 +81,9 @@ export async function getArticle(
     return LIMIT_EXCEEDED_MESSAGE;
   }
 
-  const textPromise = getArticleText(openai, formattedPath);
-  const imagePromise = getArticleImage(openai, formattedPath);
-  const [text, image] = await Promise.all([textPromise, imagePromise]);
-  const guideEntry = `${image}\n\n${text}`;
+  const text = await getArticleText(openai, formattedPath);
+  const image = await getArticleImage(openai, formattedPath, text);
+  const guideEntry = image ? `${image}\n\n${text}` : text;
 
   await articles.put(urlPath || "404", guideEntry);
 
