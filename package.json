@@ -15,6 +15,7 @@
     "openai": "^4.92.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250409.0",
     "wrangler": "^4.9.1"
   }
 }
