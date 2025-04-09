@@ -1,0 +1,250 @@
+---
+import Layout from '../layouts/Layout.astro';
+import OpenAI from 'openai';
+import { marked } from 'marked';
+
+const openai = new OpenAI({
+  apiKey: import.meta.env.OPENAI_API_KEY,
+});
+
+const query = Astro.url.searchParams.get('q') || '';
+
+// Generate search results in Douglas Adams' style
+const completion = await openai.chat.completions.create({
+  model: "gpt-3.5-turbo",
+  messages: [
+    {
+      role: "system",
+      content: "You are the Hitchhiker's Guide to the Galaxy's search engine. Generate 5-7 search results in markdown format. Each result should be a list item with a made-up but plausible article title as a link, followed by a brief, witty description in Douglas Adams' style. Make the results absurd and humorous while being loosely related to the search query."
+    },
+    {
+      role: "user",
+      content: `Generate Hitchhiker's Guide to the Galaxy style search results for: "${query}". Each result should be in this format:
+- [Title of the Article](/made-up-url) - Brief, witty description`
+    }
+  ],
+  temperature: 0.9,
+  max_tokens: 500
+});
+
+const searchResults = marked(completion.choices[0].message.content);
+---
+
+<Layout>
+  <div id="stars"></div>
+  <div id="stars2"></div>
+  <div id="stars3"></div>
+  
+  <div id="container">
+    <main>
+      <section id="hero">
+        <h1>DON'T PANIC</h1>
+        <div class="search-container">
+          <form action="/search" method="get" class="search-form">
+            <input 
+              type="text" 
+              name="q" 
+              value={query}
+              placeholder="Search the Guide..." 
+              class="search-input"
+            />
+            <button type="submit" class="search-button">Search</button>
+          </form>
+        </div>
+
+        {query && (
+          <div class="results-container">
+            <h2>Guide Entries Related to "{query}"</h2>
+            <div class="search-results" set:html={searchResults} />
+            <p class="note">Note: The Hitchhiker's Guide to the Galaxy's search algorithm is powered by the Infinite Improbability Drive, results may vary wildly across parallel universes.</p>
+          </div>
+        )}
+      </section>
+    </main>
+  </div>
+</Layout>
+
+<style>
+  #container {
+    height: 100%;
+    padding: 2rem;
+  }
+
+  main {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  #hero {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: flex-start;
+    text-align: center;
+    padding: 16px;
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 4rem;
+    margin: 0;
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px var(--guide-green);
+    animation: pulse 2s infinite;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin: 2rem 0;
+    opacity: 0.9;
+  }
+
+  @keyframes pulse {
+    0% { text-shadow: 0 0 20px var(--guide-green); }
+    50% { text-shadow: 0 0 40px var(--guide-green); }
+    100% { text-shadow: 0 0 20px var(--guide-green); }
+  }
+
+  .search-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 2rem 0;
+  }
+
+  .search-form {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .search-input {
+    flex: 1;
+    background: rgba(37, 248, 142, 0.1);
+    border: 1px solid var(--guide-green);
+    border-radius: 4px;
+    padding: 0.8rem 1rem;
+    color: var(--guide-green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+  }
+
+  .search-input:focus {
+    outline: none;
+    box-shadow: 0 0 10px var(--guide-green);
+  }
+
+  .search-button {
+    background: var(--guide-green);
+    border: none;
+    border-radius: 4px;
+    padding: 0.8rem 1.5rem;
+    color: #000;
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .search-button:hover {
+    background: #fff;
+    box-shadow: 0 0 20px var(--guide-green);
+  }
+
+  .results-container {
+    width: 100%;
+    max-width: 600px;
+    text-align: left;
+  }
+
+  .search-results {
+    background: rgba(37, 248, 142, 0.1);
+    border: 1px solid var(--guide-green);
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 2rem 0;
+    backdrop-filter: blur(5px);
+  }
+
+  .search-results :global(ul) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .search-results :global(li) {
+    background: rgba(37, 248, 142, 0.05);
+    border: 1px solid rgba(37, 248, 142, 0.2);
+    border-radius: 6px;
+    padding: 1.2rem;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .search-results :global(li:hover) {
+    background: rgba(37, 248, 142, 0.1);
+    border-color: var(--guide-green);
+    transform: translateX(4px);
+  }
+
+  .search-results :global(li::before) {
+    content: ">";
+    position: absolute;
+    left: -1rem;
+    opacity: 0;
+    color: var(--guide-green);
+    transition: all 0.2s;
+  }
+
+  .search-results :global(li:hover::before) {
+    opacity: 1;
+    left: -1.5rem;
+  }
+
+  .search-results :global(a) {
+    color: var(--guide-green);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .search-results :global(a:hover) {
+    text-shadow: 0 0 10px var(--guide-green);
+  }
+
+  .search-results :global(li p) {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .note {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    font-style: italic;
+    text-align: center;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 3rem;
+    }
+
+    .search-form {
+      flex-direction: column;
+    }
+
+    .search-button {
+      width: 100%;
+    }
+  }
+</style>

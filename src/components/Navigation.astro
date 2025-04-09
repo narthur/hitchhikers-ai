@@ -9,6 +9,7 @@
       <a href="/infinite-improbability" class="nav-link">Infinite Improbability</a>
       <a href="/towels" class="nav-link">Towels</a>
       <a href="/universe" class="nav-link">Life, Universe & Everything</a>
+      <a href="/search" class="nav-link search-link">🔍 Search</a>
     </div>
   </div>
 </nav>
@@ -68,6 +69,17 @@
   .nav-link:hover {
     opacity: 1;
     text-shadow: 0 0 10px var(--guide-green);
+  }
+
+  .search-link {
+    margin-left: 1rem;
+    padding: 0.2rem 0.8rem;
+    border: 1px solid var(--guide-green);
+    border-radius: 4px;
+  }
+
+  .search-link:hover {
+    background: rgba(37, 248, 142, 0.1);
   }
 
   @media (max-width: 768px) {
