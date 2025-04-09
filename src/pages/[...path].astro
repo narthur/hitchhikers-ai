@@ -27,10 +27,14 @@ if (!guideEntry) {
     }
   ]);
 
-  guideEntry = completion.choices[0].message.content || '';
+  const content = completion.choices[0].message.content || '';
   
-  // Cache the new article indefinitely
-  await Astro.locals.runtime.env.ARTICLES.put(path || '404', guideEntry);
+  // Only cache if it's not a limit exceeded response
+  if (!content.includes("currently overloaded with requests")) {
+    await Astro.locals.runtime.env.ARTICLES.put(path || '404', content);
+  }
+  
+  guideEntry = content;
 }
 
 const renderedEntry = marked(guideEntry);

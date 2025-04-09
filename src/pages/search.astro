@@ -32,10 +32,14 @@ if (query) {
       }
     ]);
 
-    searchResults = completion.choices[0].message.content || '';
+    const content = completion.choices[0].message.content || '';
     
-    // Cache the search results indefinitely
-    await Astro.locals.runtime.env.SEARCHES.put(query, searchResults);
+    // Only cache if it's not a limit exceeded response
+    if (!content.includes("currently overloaded with requests")) {
+      await Astro.locals.runtime.env.SEARCHES.put(query, content);
+    }
+    
+    searchResults = content;
   }
 }
 
