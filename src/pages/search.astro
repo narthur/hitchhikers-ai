@@ -5,7 +5,7 @@ import { RateLimitedOpenAI } from '../lib/openai';
 
 const openai = new RateLimitedOpenAI(
   import.meta.env.OPENAI_API_KEY,
-  (Astro.locals as any).runtime.env.USAGE
+  Astro.locals.runtime.env.TOKEN_USAGE
 );
 
 const query = Astro.url.searchParams.get('q') || '';
