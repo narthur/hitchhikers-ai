@@ -1,36 +1,7 @@
 ---
-import { marked } from 'marked';
+import { getLatestArticle } from '../lib/getLatestArticle';
 
-// Get the latest entry from KV store
-const keys = await Astro.locals.runtime.env.ARTICLES.list();
-let latestEntry = null;
-
-if (keys.keys.length > 0) {
-  // Sort by metadata.uploaded (most recent first)
-  const sortedKeys = keys.keys.sort((a: any, b: any) => {
-    const aTime = a.metadata?.uploaded || 0;
-    const bTime = b.metadata?.uploaded || 0;
-    return bTime - aTime;
-  });
-
-  // Get the most recent entry
-  const latestKey = sortedKeys[0];
-  if (latestKey?.name) {
-    const fullEntry = await Astro.locals.runtime.env.ARTICLES.get(latestKey.name, "text");
-    if (fullEntry) {
-      // Parse markdown to get just the text content
-      const parsedHtml = await marked(fullEntry);
-      // Get first paragraph by finding content between first <p> tags
-      const match = parsedHtml.match(/<p>(.*?)<\/p>/);
-      const firstParagraph = match ? match[1] : '';
-      
-      latestEntry = {
-        text: firstParagraph,
-        path: latestKey.name
-      };
-    }
-  }
-}
+const latestEntry = await getLatestArticle(Astro.locals.runtime?.env?.ARTICLES);
 ---
 
 <div id="container">
