@@ -40,27 +40,49 @@ async function getArticleImage(
   openai: RateLimitedOpenAI,
   formattedPath: string,
   articleText: string
-) {
-  if (await openai.didExceedImageLimit()) {
+): Promise<string | null> {
+  try {
+    if (await openai.didExceedImageLimit()) {
+      console.log('Image limit exceeded, skipping image generation');
+      return null;
+    }
+
+    const promptCompletion = await openai.createChatCompletion([
+      {
+        role: "system",
+        content: "Create a simple, visual prompt for DALL-E. Focus on physical objects and scenes, not concepts. Describe only what the image should look like in concrete terms. Keep it under 50 words. Format: 'digital art: [description]'. Example: 'digital art: a blue alien fish wearing headphones, swimming through space, colorful nebulas in background, retro sci-fi style'"
+      },
+      {
+        role: "user",
+        content: `Create a simple visual prompt for this Guide entry about "${formattedPath}". Make it retro sci-fi style, colorful, and slightly absurd.`
+      }
+    ]);
+
+    const imagePrompt = promptCompletion.choices[0].message.content || 
+      `digital art: a retro sci-fi scene related to ${formattedPath}, colorful and quirky, in the style of a 1970s science fiction book cover`;
+
+    console.log('Attempting image generation with prompt:', imagePrompt);
+    
+    try {
+      const image = await openai.createImage(imagePrompt);
+      return image ? `<img src="data:image/png;base64,${image}" alt="${formattedPath}" width="200" height="200" />` : null;
+    } catch (imageError: any) {
+      console.error('Image generation error details:', {
+        errorType: imageError?.type || 'unknown',
+        errorCode: imageError?.code || 'none',
+        errorMessage: imageError?.message || 'No message',
+        errorStatus: imageError?.status || 'unknown',
+        requestId: imageError?.request_id || 'none',
+        prompt: imagePrompt,
+        path: formattedPath
+      });
+      
+      return null;
+    }
+  } catch (error) {
+    console.error('Error in prompt generation:', error);
     return null;
   }
-
-  const promptCompletion = await openai.createChatCompletion([
-    {
-      role: "system",
-      content: "You are an expert at creating image generation prompts. Given an article from the Hitchhiker's Guide to the Galaxy, create a single vivid, detailed prompt that captures the most interesting visual elements. Focus on concrete visual details, avoid abstract concepts, and do not include any text elements in the image description. Keep the prompt under 100 words and make it quirky and memorable in Douglas Adams' style."
-    },
-    {
-      role: "user",
-      content: `Create an image generation prompt for this Guide entry about "${formattedPath}":\n\n${articleText}`
-    }
-  ]);
-
-  const imagePrompt = promptCompletion.choices[0].message.content || 
-    `Absurd and humorous image illustrating "${formattedPath}" in the style of the Hitchhiker's Guide to the Galaxy. Focus on visual details and symbolism. Do not include any text.`;
-
-  const image = await openai.createImage(imagePrompt);
-  return image ? `<img src="data:image/png;base64,${image}" alt="${formattedPath}" width="200" height="200" />` : null;
 }
 
 export async function getArticle(
@@ -81,11 +103,23 @@ export async function getArticle(
     return LIMIT_EXCEEDED_MESSAGE;
   }
 
-  const text = await getArticleText(openai, formattedPath);
-  const image = await getArticleImage(openai, formattedPath, text);
-  const guideEntry = image ? `${image}\n\n${text}` : text;
+  try {
+    const text = await getArticleText(openai, formattedPath);
+    let guideEntry = text;
 
-  await articles.put(urlPath || "404", guideEntry);
+    try {
+      const image = await getArticleImage(openai, formattedPath, text);
+      if (image) {
+        guideEntry = `${image}\n\n${text}`;
+      }
+    } catch (imageError) {
+      console.error('Failed to generate image, continuing without one:', imageError);
+    }
 
-  return marked(guideEntry);
+    await articles.put(urlPath || "404", guideEntry);
+    return marked(guideEntry);
+  } catch (error) {
+    console.error('Error generating article:', error);
+    throw error;  // Let the API handler deal with the error
+  }
 }

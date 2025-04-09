@@ -1,19 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getArticle } from '../lib/getArticle';
 
 const { path } = Astro.params;
 const formattedPath = path?.replace(/[/-]/g, ' ').trim() || '404';
-
-// Generate a random article ID in the style of the Guide
-const articleId = `${Math.floor(Math.random() * 900000) + 100000}-${['alpha', 'beta', 'gamma', 'delta', 'epsilon'][Math.floor(Math.random() * 5)]}`;
-
-const renderedEntry = await getArticle(
-  Astro.locals.runtime.env.OPENAI_API_KEY,
-  Astro.locals.runtime.env.TOKEN_USAGE,
-  Astro.locals.runtime.env.ARTICLES,
-  path || '404'
-);
 ---
 
 <Layout>
@@ -24,10 +13,20 @@ const renderedEntry = await getArticle(
   <div id="container">
     <main>
       <section id="hero">
-        <div class="article-id">Guide Entry #{articleId}</div>
+        <div class="article-id">Guide Entry #{Math.floor(Math.random() * 900000) + 100000}-{['alpha', 'beta', 'gamma', 'delta', 'epsilon'][Math.floor(Math.random() * 5)]}</div>
         <h1 class="article-title">{formattedPath}</h1>
         <div class="guide-entry">
-          <div class="guide-text" set:html={renderedEntry} />
+          <div id="loading" class="loading">
+            <div class="loading-text">
+              <span class="blink">&gt;</span> Computing improbabilities...
+            </div>
+            <div class="loading-subtext">Please wait while the Guide consults its quantum processors</div>
+          </div>
+          <div id="content" class="guide-text hidden"></div>
+          <div id="error" class="error hidden">
+            <p>The Guide seems to be experiencing technical difficulties. Please try again later.</p>
+            <p class="note">Error Code: IMPROBABILITY_OVERFLOW</p>
+          </div>
         </div>
         <section id="links">
           <a class="button" href="/">Return to Earth</a>
@@ -36,6 +35,46 @@ const renderedEntry = await getArticle(
     </main>
   </div>
 </Layout>
+
+<script>
+  async function loadArticle() {
+    const content = document.getElementById('content');
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    
+    if (!content || !loading || !error) return;
+    
+    try {
+      const path = window.location.pathname;
+      console.log('Fetching article for path:', path);
+      
+      const response = await fetch(`/api/article${path}`);
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Received data:', data);
+      
+      if (data.error) throw new Error(data.error);
+      if (!data.content) throw new Error('No content received');
+      
+      content.innerHTML = data.content;
+      content.classList.remove('hidden');
+      loading.classList.add('hidden');
+    } catch (e) {
+      console.error('Error loading article:', e);
+      error.classList.remove('hidden');
+      loading.classList.add('hidden');
+    }
+  }
+
+  loadArticle();
+</script>
 
 <style>
   #container {
@@ -58,6 +97,7 @@ const renderedEntry = await getArticle(
     justify-content: flex-start;
     text-align: center;
     padding: 16px;
+    width: 100%;
   }
 
   .article-id {
@@ -92,6 +132,17 @@ const renderedEntry = await getArticle(
     100% { text-shadow: 0 0 20px var(--guide-green); }
   }
 
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .blink {
+    animation: blink 1s infinite;
+    margin-right: 0.5rem;
+    display: inline-block;
+  }
+
   #links {
     display: flex;
     gap: 16px;
@@ -124,12 +175,19 @@ const renderedEntry = await getArticle(
     max-width: 600px;
     text-align: left;
     backdrop-filter: blur(5px);
+    min-height: 300px;
+    position: relative;
   }
 
   .guide-text {
     font-size: 1.1rem;
     line-height: 1.6;
-    margin: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  .guide-text:not(.hidden) {
+    opacity: 1;
   }
 
   .guide-text :global(a) {
@@ -157,61 +215,54 @@ const renderedEntry = await getArticle(
   }
 
   .guide-text :global(a:hover) {
-    color: #fff;
-    background: rgba(37, 248, 142, 0.2);
-    border-color: var(--guide-green);
-    text-shadow: 0 0 8px var(--guide-green);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(37, 248, 142, 0.2);
+    text-shadow: 0 0 10px var(--guide-green);
   }
 
-  .guide-text :global(a:hover::after) {
-    opacity: 1;
-    transform: translateX(2px) translateY(-2px);
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    gap: 1rem;
   }
 
-  .guide-text :global(p) {
-    margin: 1rem 0;
+  .loading-text {
+    font-size: 1.2rem;
+    color: var(--guide-green);
   }
 
-  .guide-text :global(p:first-child) {
-    margin-top: 0;
-  }
-
-  .guide-text :global(p:last-child) {
-    margin-bottom: 0;
-  }
-
-  .guide-text :global(em) {
-    color: #fff;
+  .loading-subtext {
+    font-size: 0.9rem;
+    opacity: 0.7;
     font-style: italic;
   }
 
-  .guide-text :global(strong) {
-    color: #fff;
-    font-weight: bold;
+  .error {
+    text-align: center;
+    color: var(--guide-green);
+    padding: 2rem;
   }
 
-  .guide-text :global(blockquote) {
-    margin: 1rem 0;
-    padding-left: 1rem;
-    border-left: 2px solid var(--guide-green);
+  .error .note {
+    font-size: 0.9rem;
+    opacity: 0.7;
     font-style: italic;
-    opacity: 0.9;
+    margin-top: 1rem;
   }
 
-  .guide-text :global(ul), .guide-text :global(ol) {
-    margin: 1rem 0;
-    padding-left: 1.5rem;
-  }
-
-  .guide-text :global(li) {
-    margin: 0.5rem 0;
+  .hidden {
+    display: none;
   }
 
   @media screen and (max-width: 768px) {
     h1.article-title {
       font-size: 2rem;
+    }
+
+    .guide-entry {
+      margin: 0 1rem;
+      width: calc(100% - 2rem);
     }
   }
 </style>

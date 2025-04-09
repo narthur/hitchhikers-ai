@@ -10,6 +10,7 @@ interface DailyUsage {
 export const LIMIT_EXCEEDED_MESSAGE =
   "The Guide's computational circuits are currently overloaded with requests from various parts of the galaxy. Please try again tomorrow. DON'T PANIC - this is a temporary measure to prevent the heat death of the universe.";
 
+const IMAGE_TIMEOUT = 10000; // 10 seconds
 export class RateLimitedOpenAI {
   private readonly openai: OpenAI;
   private readonly tokenUsage: KVNamespace;
@@ -70,6 +71,7 @@ export class RateLimitedOpenAI {
   }
 
   async didExceedImageLimit() {
+    console.log("Checking image limit");
     const today = new Date().toISOString().split("T")[0];
     const usage = await this.getUsage(today);
 
@@ -117,19 +119,40 @@ export class RateLimitedOpenAI {
     const today = new Date().toISOString().split("T")[0];
 
     if (await this.didExceedImageLimit()) {
+      console.log("Image limit exceeded");
       return null;
     }
 
-    const completion = await this.openai.images.generate({
-      prompt,
-      n: 1,
-      size: "256x256",
-      response_format: "b64_json",
-    });
+    console.log("Generating image");
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), IMAGE_TIMEOUT);
 
-    // Update usage to count the image generation
-    await this.updateUsage(today, 0, true);
+    try {
+      const completion = await Promise.race<OpenAI.Images.ImagesResponse>([
+        this.openai.images.generate({
+          prompt,
+          n: 1,
+          size: "256x256",
+          response_format: "b64_json",
+        }),
+        new Promise((_, reject) => {
+          controller.signal.addEventListener("abort", () => {
+            reject(
+              new Error(`Image generation timed out after ${IMAGE_TIMEOUT}ms`)
+            );
+          });
+        }),
+      ]);
 
-    return completion.data[0].b64_json;
+      // Update usage to count the image generation
+      await this.updateUsage(today, 0, true);
+
+      return completion.data[0].b64_json;
+    } catch (error) {
+      console.error("Image generation error:", error);
+      return null;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 }
