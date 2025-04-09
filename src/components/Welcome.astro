@@ -19,7 +19,7 @@ if (keys.keys.length > 0) {
     const fullEntry = await Astro.locals.runtime.env.ARTICLES.get(latestKey.name, "text");
     if (fullEntry) {
       // Parse markdown to get just the text content
-      const parsedHtml = marked(fullEntry);
+      const parsedHtml = await marked(fullEntry);
       // Get first paragraph by finding content between first <p> tags
       const match = parsedHtml.match(/<p>(.*?)<\/p>/);
       const firstParagraph = match ? match[1] : '';
