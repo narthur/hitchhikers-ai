@@ -16,9 +16,9 @@ import Navigation from '../components/Navigation.astro';
 	</head>
 	<body>
 		<Navigation />
-		<div class="content">
+		<main class="content">
 			<slot />
-		</div>
+		</main>
 	</body>
 </html>
 
@@ -42,7 +42,6 @@ import Navigation from '../components/Navigation.astro';
 	}
 
 	.content {
-		padding-top: 4rem;
 		min-height: 100%;
 	}
 </style>
