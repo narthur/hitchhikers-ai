@@ -19,11 +19,16 @@ if (!guideEntry) {
   const completion = await openai.createChatCompletion([
     {
       role: "system",
-      content: "You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Use markdown formatting for emphasis, lists, and quotes. Keep responses between 3-4 paragraphs."
+      content: `You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Use markdown formatting for emphasis, lists, and quotes. Keep responses between 3-4 paragraphs.
+
+IMPORTANT: Throughout your response, create internal links to other imaginary Guide entries. Format these as markdown links with kebab-case URLs, e.g. [Infinite Improbability Drive](/infinite-improbability-drive) or [Sub-Etha Sens-O-Matic](/sub-etha-sens-o-matic). Add at least 3-4 such links naturally within the text. Each link should have its own unique, imaginary URL path starting with a forward slash.
+
+Example paragraph with links:
+"The [Babel Fish](/babel-fish) has revolutionized interstellar communication, though the [Galactic Institute of Linguistics](/galactic-institute-of-linguistics) still debates whether it should be classified as a fish or a particularly ambitious translator. Some scholars at the [Maximegalon University](/maximegalon-university) suggest it's actually a very small, very wet computer."`
     },
     {
       role: "user",
-      content: `Write a Hitchhiker's Guide to the Galaxy style entry about "${formattedPath}". Make it humorous and slightly absurd, as if it's an entry in the actual Guide. Feel free to use markdown for formatting.`
+      content: `Write a Hitchhiker's Guide to the Galaxy style entry about "${formattedPath}". Make it humorous and slightly absurd, as if it's an entry in the actual Guide. Include at least 3-4 internal links to other imaginary Guide entries, formatted as markdown links with proper URL paths.`
     }
   ]);
 
