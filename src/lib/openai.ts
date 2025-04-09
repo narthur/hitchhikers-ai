@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { type KVNamespace } from "@cloudflare/workers-types";
+import type { KVNamespace } from "@cloudflare/workers-types";
 interface DailyUsage {
   totalTokens: number;
   lastUpdated: string;

@@ -4,7 +4,7 @@ import { marked } from 'marked';
 import { RateLimitedOpenAI } from '../lib/openai';
 
 const openai = new RateLimitedOpenAI(
-  import.meta.env.OPENAI_API_KEY,
+  Astro.locals.runtime.env.OPENAI_API_KEY,
   Astro.locals.runtime.env.TOKEN_USAGE
 );
 
