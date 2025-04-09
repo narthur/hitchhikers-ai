@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import OpenAI from 'openai';
+import { marked } from 'marked';
 
 const openai = new OpenAI({
   apiKey: import.meta.env.OPENAI_API_KEY,
@@ -17,18 +18,18 @@ const completion = await openai.chat.completions.create({
   messages: [
     {
       role: "system",
-      content: "You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Keep responses between 3-4 paragraphs."
+      content: "You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Use markdown formatting for emphasis, lists, and quotes. Keep responses between 3-4 paragraphs."
     },
     {
       role: "user",
-      content: `Write a Hitchhiker's Guide to the Galaxy style entry about "${formattedPath}". Make it humorous and slightly absurd, as if it's an entry in the actual Guide.`
+      content: `Write a Hitchhiker's Guide to the Galaxy style entry about "${formattedPath}". Make it humorous and slightly absurd, as if it's an entry in the actual Guide. Feel free to use markdown for formatting.`
     }
   ],
   temperature: 0.9,
   max_tokens: 500
 });
 
-const guideEntry = completion.choices[0].message.content;
+const guideEntry = marked(completion.choices[0].message.content);
 ---
 
 <Layout>
@@ -42,7 +43,7 @@ const guideEntry = completion.choices[0].message.content;
         <h1>DON'T PANIC</h1>
         <p class="subtitle">The Guide's Entry on: {formattedPath}</p>
         <div class="guide-entry">
-          <p class="guide-text">{guideEntry}</p>
+          <div class="guide-text" set:html={guideEntry} />
           <p class="note">Note: The Hitchhiker's Guide to the Galaxy has this to say about lost travelers: "Don't Panic"</p>
         </div>
         <section id="links">
@@ -141,6 +142,45 @@ const guideEntry = completion.choices[0].message.content;
     font-size: 1.1rem;
     line-height: 1.6;
     margin: 0 0 1.5rem;
+  }
+
+  .guide-text :global(p) {
+    margin: 1rem 0;
+  }
+
+  .guide-text :global(p:first-child) {
+    margin-top: 0;
+  }
+
+  .guide-text :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .guide-text :global(em) {
+    color: #fff;
+    font-style: italic;
+  }
+
+  .guide-text :global(strong) {
+    color: #fff;
+    font-weight: bold;
+  }
+
+  .guide-text :global(blockquote) {
+    margin: 1rem 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--guide-green);
+    font-style: italic;
+    opacity: 0.9;
+  }
+
+  .guide-text :global(ul), .guide-text :global(ol) {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .guide-text :global(li) {
+    margin: 0.5rem 0;
   }
 
   .note {
