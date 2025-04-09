@@ -10,5 +10,8 @@
       "binding": "TOKEN_USAGE",
       "id": "2da1bbe02c284aa4956e377a0d35b712"
     }
-  ]
+  ],
+  "assets": {
+    "directory": "dist"
+  }
 }
