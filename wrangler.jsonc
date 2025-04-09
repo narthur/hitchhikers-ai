@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "hitchhikers-ai",
   "compatibility_date": "2025-02-04",
+  "main": "dist/_worker.js/index.js",
   "observability": {
     "enabled": true
   },
