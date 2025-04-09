@@ -10,20 +10,36 @@ const openai = new RateLimitedOpenAI(
 
 const query = Astro.url.searchParams.get('q') || '';
 
-// Generate search results in Douglas Adams' style
-const completion = await openai.createChatCompletion([
-  {
-    role: "system",
-    content: "You are the Hitchhiker's Guide to the Galaxy's search engine. Generate 5-7 search results in markdown format. Each result should be a list item with a made-up but plausible article title as a link, followed by a brief, witty description in Douglas Adams' style. Make the results absurd and humorous while being loosely related to the search query."
-  },
-  {
-    role: "user",
-    content: `Generate Hitchhiker's Guide to the Galaxy style search results for: "${query}". Each result should be in this format:
-- [Title of the Article](/made-up-url) - Brief, witty description`
-  }
-]);
+let searchResults = '';
 
-const searchResults = marked(completion.choices[0].message.content || '');
+if (query) {
+  // Try to get cached search results first
+  const cachedResults = await Astro.locals.runtime.env.SEARCHES.get(query, 'text');
+
+  if (cachedResults) {
+    searchResults = cachedResults;
+  } else {
+    // Generate new search results if not cached
+    const completion = await openai.createChatCompletion([
+      {
+        role: "system",
+        content: "You are the Hitchhiker's Guide to the Galaxy's search engine. Generate 5-7 search results in markdown format. Each result should be a list item with a made-up but plausible article title as a link, followed by a brief, witty description in Douglas Adams' style. Make the results absurd and humorous while being loosely related to the search query."
+      },
+      {
+        role: "user",
+        content: `Generate Hitchhiker's Guide to the Galaxy style search results for: "${query}". Each result should be in this format:
+- [Title of the Article](/made-up-url) - Brief, witty description`
+      }
+    ]);
+
+    searchResults = completion.choices[0].message.content || '';
+    
+    // Cache the search results indefinitely
+    await Astro.locals.runtime.env.SEARCHES.put(query, searchResults);
+  }
+}
+
+const renderedResults = searchResults ? marked(searchResults) : '';
 ---
 
 <Layout>
@@ -51,7 +67,7 @@ const searchResults = marked(completion.choices[0].message.content || '');
         {query && (
           <div class="results-container">
             <h2>Guide Entries Related to "{query}"</h2>
-            <div class="search-results" set:html={searchResults} />
+            <div class="search-results" set:html={renderedResults} />
             <p class="note">Note: The Hitchhiker's Guide to the Galaxy's search algorithm is powered by the Infinite Improbability Drive, results may vary wildly across parallel universes.</p>
           </div>
         )}

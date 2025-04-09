@@ -9,23 +9,31 @@ const openai = new RateLimitedOpenAI(
 );
 
 const { path } = Astro.params;
-
-// Format the path for better prompting
 const formattedPath = path?.replace(/[/-]/g, ' ').trim() || '404';
 
-// Generate content in Douglas Adams' style
-const completion = await openai.createChatCompletion([
-  {
-    role: "system",
-    content: "You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Use markdown formatting for emphasis, lists, and quotes. Keep responses between 3-4 paragraphs."
-  },
-  {
-    role: "user",
-    content: `Write a Hitchhiker's Guide to the Galaxy style entry about "${formattedPath}". Make it humorous and slightly absurd, as if it's an entry in the actual Guide. Feel free to use markdown for formatting.`
-  }
-]);
+// Try to get cached article first
+let guideEntry = await Astro.locals.runtime.env.ARTICLES.get(path || '404', 'text');
 
-const guideEntry = marked(completion.choices[0].message.content || '');
+if (!guideEntry) {
+  // Generate new content if not cached
+  const completion = await openai.createChatCompletion([
+    {
+      role: "system",
+      content: "You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Use markdown formatting for emphasis, lists, and quotes. Keep responses between 3-4 paragraphs."
+    },
+    {
+      role: "user",
+      content: `Write a Hitchhiker's Guide to the Galaxy style entry about "${formattedPath}". Make it humorous and slightly absurd, as if it's an entry in the actual Guide. Feel free to use markdown for formatting.`
+    }
+  ]);
+
+  guideEntry = completion.choices[0].message.content || '';
+  
+  // Cache the new article indefinitely
+  await Astro.locals.runtime.env.ARTICLES.put(path || '404', guideEntry);
+}
+
+const renderedEntry = marked(guideEntry);
 ---
 
 <Layout>
@@ -39,7 +47,7 @@ const guideEntry = marked(completion.choices[0].message.content || '');
         <h1>DON'T PANIC</h1>
         <p class="subtitle">The Guide's Entry on: {formattedPath}</p>
         <div class="guide-entry">
-          <div class="guide-text" set:html={guideEntry} />
+          <div class="guide-text" set:html={renderedEntry} />
           <p class="note">Note: The Hitchhiker's Guide to the Galaxy has this to say about lost travelers: "Don't Panic"</p>
         </div>
         <section id="links">

@@ -10,6 +10,14 @@
     {
       "binding": "TOKEN_USAGE",
       "id": "2da1bbe02c284aa4956e377a0d35b712"
+    },
+    {
+      "binding": "ARTICLES",
+      "id": "feafac9d860c4adcb732576d3a0549ab"
+    },
+    {
+      "binding": "SEARCHES",
+      "id": "21df91c40fca483aadb58a56e8e03d3e"
     }
   ]
 }
