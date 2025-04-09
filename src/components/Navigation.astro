@@ -4,11 +4,7 @@
       <span class="blink">></span> The Guide
     </a>
     <div class="nav-links">
-      <a href="/babel-fish" class="nav-link">Babel Fish</a>
-      <a href="/deep-thought" class="nav-link">Deep Thought</a>
-      <a href="/infinite-improbability" class="nav-link">Infinite Improbability</a>
-      <a href="/towels" class="nav-link">Towels</a>
-      <a href="/universe" class="nav-link">Life, Universe & Everything</a>
+      <button class="nav-link random-link">🎲 Random Article</button>
       <a href="/search" class="nav-link search-link">🔍 Search</a>
     </div>
   </div>
@@ -60,7 +56,7 @@
     display: flex;
     gap: 1.5rem;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     flex-wrap: wrap;
     flex: 1;
     padding: 0.5rem 0;
@@ -71,24 +67,36 @@
     text-decoration: none;
     opacity: 0.8;
     transition: all 0.2s;
-    padding: 0.3rem 0;
+    padding: 0.3rem 0.8rem;
     line-height: 1;
+    border: 1px solid var(--guide-green);
+    border-radius: 4px;
+    background: transparent;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  button.nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .nav-link:hover {
     opacity: 1;
     text-shadow: 0 0 10px var(--guide-green);
-  }
-
-  .search-link {
-    margin-left: 0.5rem;
-    padding: 0.3rem 0.8rem;
-    border: 1px solid var(--guide-green);
-    border-radius: 4px;
-  }
-
-  .search-link:hover {
     background: rgba(37, 248, 142, 0.1);
+  }
+
+  .nav-link:active {
+    background: rgba(37, 248, 142, 0.2);
+    transform: translateY(1px);
+  }
+
+  .nav-link:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(37, 248, 142, 0.3);
   }
 
   @media (max-width: 768px) {
@@ -103,9 +111,24 @@
       gap: 1rem 1.5rem;
       padding: 0;
     }
-
-    .search-link {
-      margin-left: 0;
-    }
   }
 </style>
+
+<script>
+  const GUIDE_PATHS = [
+    '/babel-fish',
+    '/deep-thought',
+    '/infinite-improbability',
+    '/towels',
+    '/universe'
+  ];
+
+  const getRandomPath = () => {
+    const randomIndex = Math.floor(Math.random() * GUIDE_PATHS.length);
+    return GUIDE_PATHS[randomIndex];
+  };
+
+  document.querySelector('.random-link')?.addEventListener('click', () => {
+    window.location.href = getRandomPath();
+  });
+</script>
