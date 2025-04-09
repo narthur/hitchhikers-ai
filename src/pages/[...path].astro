@@ -29,7 +29,7 @@ const completion = await openai.chat.completions.create({
   max_tokens: 500
 });
 
-const guideEntry = marked(completion.choices[0].message.content);
+const guideEntry = marked(completion.choices[0].message.content || '');
 ---
 
 <Layout>
