@@ -9,6 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^12.4.0",
     "astro": "^5.6.1",
     "marked": "^15.0.8",
     "openai": "^4.92.1"
