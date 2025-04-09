@@ -1,31 +1,27 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import OpenAI from 'openai';
 import { marked } from 'marked';
+import { RateLimitedOpenAI } from '../lib/openai';
 
-const openai = new OpenAI({
-  apiKey: import.meta.env.OPENAI_API_KEY,
-});
+const openai = new RateLimitedOpenAI(
+  import.meta.env.OPENAI_API_KEY,
+  (Astro.locals as any).runtime.env.TOKEN_USAGE
+);
 
 const query = Astro.url.searchParams.get('q') || '';
 
 // Generate search results in Douglas Adams' style
-const completion = await openai.chat.completions.create({
-  model: "gpt-3.5-turbo",
-  messages: [
-    {
-      role: "system",
-      content: "You are the Hitchhiker's Guide to the Galaxy's search engine. Generate 5-7 search results in markdown format. Each result should be a list item with a made-up but plausible article title as a link, followed by a brief, witty description in Douglas Adams' style. Make the results absurd and humorous while being loosely related to the search query."
-    },
-    {
-      role: "user",
-      content: `Generate Hitchhiker's Guide to the Galaxy style search results for: "${query}". Each result should be in this format:
+const completion = await openai.createChatCompletion([
+  {
+    role: "system",
+    content: "You are the Hitchhiker's Guide to the Galaxy's search engine. Generate 5-7 search results in markdown format. Each result should be a list item with a made-up but plausible article title as a link, followed by a brief, witty description in Douglas Adams' style. Make the results absurd and humorous while being loosely related to the search query."
+  },
+  {
+    role: "user",
+    content: `Generate Hitchhiker's Guide to the Galaxy style search results for: "${query}". Each result should be in this format:
 - [Title of the Article](/made-up-url) - Brief, witty description`
-    }
-  ],
-  temperature: 0.9,
-  max_tokens: 500
-});
+  }
+]);
 
 const searchResults = marked(completion.choices[0].message.content || '');
 ---

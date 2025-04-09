@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hitchhikers-ai",
+  "compatibility_date": "2025-02-04",
+  "observability": {
+    "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "TOKEN_USAGE",
+      "id": "YOUR_KV_ID_HERE",
+      "preview_id": "YOUR_PREVIEW_KV_ID_HERE"
+    }
+  ]
+}

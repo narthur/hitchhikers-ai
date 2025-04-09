@@ -1,11 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import OpenAI from 'openai';
 import { marked } from 'marked';
+import { RateLimitedOpenAI } from '../lib/openai';
 
-const openai = new OpenAI({
-  apiKey: import.meta.env.OPENAI_API_KEY,
-});
+const openai = new RateLimitedOpenAI(
+  import.meta.env.OPENAI_API_KEY,
+  (Astro.locals as any).runtime.env.TOKEN_USAGE
+);
 
 const { path } = Astro.params;
 
@@ -13,21 +14,16 @@ const { path } = Astro.params;
 const formattedPath = path?.replace(/[/-]/g, ' ').trim() || '404';
 
 // Generate content in Douglas Adams' style
-const completion = await openai.chat.completions.create({
-  model: "gpt-3.5-turbo",
-  messages: [
-    {
-      role: "system",
-      content: "You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Use markdown formatting for emphasis, lists, and quotes. Keep responses between 3-4 paragraphs."
-    },
-    {
-      role: "user",
-      content: `Write a Hitchhiker's Guide to the Galaxy style entry about "${formattedPath}". Make it humorous and slightly absurd, as if it's an entry in the actual Guide. Feel free to use markdown for formatting.`
-    }
-  ],
-  temperature: 0.9,
-  max_tokens: 500
-});
+const completion = await openai.createChatCompletion([
+  {
+    role: "system",
+    content: "You are the Hitchhiker's Guide to the Galaxy. Respond in the style of Douglas Adams with wit, humor, and mild absurdity. Use markdown formatting for emphasis, lists, and quotes. Keep responses between 3-4 paragraphs."
+  },
+  {
+    role: "user",
+    content: `Write a Hitchhiker's Guide to the Galaxy style entry about "${formattedPath}". Make it humorous and slightly absurd, as if it's an entry in the actual Guide. Feel free to use markdown for formatting.`
+  }
+]);
 
 const guideEntry = marked(completion.choices[0].message.content || '');
 ---
