@@ -1,14 +1,20 @@
 import OpenAI from "openai";
 import type { KVNamespace } from "@cloudflare/workers-types";
+
 interface DailyUsage {
   totalTokens: number;
+  imageGenerations: number;
   lastUpdated: string;
 }
+
+export const LIMIT_EXCEEDED_MESSAGE =
+  "The Guide's computational circuits are currently overloaded with requests from various parts of the galaxy. Please try again tomorrow. DON'T PANIC - this is a temporary measure to prevent the heat death of the universe.";
 
 export class RateLimitedOpenAI {
   private readonly openai: OpenAI;
   private readonly tokenUsage: KVNamespace;
   private readonly MAX_TOKENS_PER_DAY = 100000;
+  private readonly MAX_IMAGES_PER_DAY = 10;
   private readonly KV_TTL_SECONDS = 86400; // 24 hours
 
   constructor(apiKey: string, tokenUsage: KVNamespace) {
@@ -18,13 +24,24 @@ export class RateLimitedOpenAI {
 
   private async getUsage(dateKey: string): Promise<DailyUsage> {
     const usage = await this.tokenUsage.get<DailyUsage>(dateKey, "json");
-    return usage || { totalTokens: 0, lastUpdated: new Date().toISOString() };
+    return (
+      usage || {
+        totalTokens: 0,
+        imageGenerations: 0,
+        lastUpdated: new Date().toISOString(),
+      }
+    );
   }
 
-  private async updateUsage(dateKey: string, newTokens: number): Promise<void> {
+  private async updateUsage(
+    dateKey: string,
+    newTokens: number = 0,
+    newImage: boolean = false
+  ): Promise<void> {
     const current = await this.getUsage(dateKey);
     const updated: DailyUsage = {
       totalTokens: current.totalTokens + newTokens,
+      imageGenerations: current.imageGenerations + (newImage ? 1 : 0),
       lastUpdated: new Date().toISOString(),
     };
 
@@ -38,12 +55,25 @@ export class RateLimitedOpenAI {
       choices: [
         {
           message: {
-            content:
-              "The Guide's computational circuits are currently overloaded with requests from various parts of the galaxy. Please try again tomorrow. DON'T PANIC - this is a temporary measure to prevent the heat death of the universe.",
+            content: LIMIT_EXCEEDED_MESSAGE,
           },
         },
       ],
     };
+  }
+
+  async didExceedLimit() {
+    const today = new Date().toISOString().split("T")[0];
+    const usage = await this.getUsage(today);
+
+    return usage.totalTokens >= this.MAX_TOKENS_PER_DAY;
+  }
+
+  async didExceedImageLimit() {
+    const today = new Date().toISOString().split("T")[0];
+    const usage = await this.getUsage(today);
+
+    return usage.imageGenerations >= this.MAX_IMAGES_PER_DAY;
   }
 
   async createChatCompletion(
@@ -53,9 +83,8 @@ export class RateLimitedOpenAI {
     } = {}
   ) {
     const today = new Date().toISOString().split("T")[0];
-    const usage = await this.getUsage(today);
 
-    if (usage.totalTokens >= this.MAX_TOKENS_PER_DAY) {
+    if (await this.didExceedLimit()) {
       return this.getLimitExceededResponse();
     }
 
@@ -82,5 +111,25 @@ export class RateLimitedOpenAI {
 
       throw error;
     }
+  }
+
+  async createImage(prompt: string) {
+    const today = new Date().toISOString().split("T")[0];
+
+    if (await this.didExceedImageLimit()) {
+      return null;
+    }
+
+    const completion = await this.openai.images.generate({
+      prompt,
+      n: 1,
+      size: "256x256",
+      response_format: "b64_json",
+    });
+
+    // Update usage to count the image generation
+    await this.updateUsage(today, 0, true);
+
+    return completion.data[0].b64_json;
   }
 }
