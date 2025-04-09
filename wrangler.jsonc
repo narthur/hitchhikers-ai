@@ -7,9 +7,8 @@
   },
   "kv_namespaces": [
     {
-      "binding": "TOKEN_USAGE",
-      "id": "YOUR_KV_ID_HERE",
-      "preview_id": "YOUR_PREVIEW_KV_ID_HERE"
+      "binding": "USAGE",
+      "id": "ce124f41f7994f638c447a1e099db9f5"
     }
   ]
 }
