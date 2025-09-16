@@ -1,7 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 
-const query = Astro.url.searchParams.get('q') || '';
+const query = Astro.url.searchParams.get("q") || "";
 ---
 
 <Layout>
@@ -11,11 +11,11 @@ const query = Astro.url.searchParams.get('q') || '';
         <h1>DON'T PANIC</h1>
         <div class="search-container">
           <form id="search-form" class="search-form">
-            <input 
-              type="text" 
-              name="q" 
+            <input
+              type="text"
+              name="q"
               value={query}
-              placeholder="Search the Guide..." 
+              placeholder="Search the Guide..."
               class="search-input"
             />
             <button type="submit" class="search-button">Search</button>
@@ -27,17 +27,26 @@ const query = Astro.url.searchParams.get('q') || '';
             <div class="loading-text">
               <span class="blink">&gt;</span> Computing search probabilities...
             </div>
-            <div class="loading-subtext">Please wait while the Guide consults its quantum processors</div>
+            <div class="loading-subtext">
+              Please wait while the Guide consults its quantum processors
+            </div>
           </div>
 
           <div id="results" class="search-results hidden"></div>
-          
+
           <div id="error" class="error hidden">
-            <p>The Guide seems to be experiencing technical difficulties. Please try again later.</p>
+            <p>
+              The Guide seems to be experiencing technical difficulties. Please
+              try again later.
+            </p>
             <p class="note">Error Code: SEARCH_IMPROBABILITY_OVERFLOW</p>
           </div>
 
-          <p class="note">Note: The Hitchhiker's Guide to the Galaxy's search algorithm is powered by the Infinite Improbability Drive, results may vary wildly across parallel universes.</p>
+          <p class="note">
+            Note: The Hitchhiker's Guide to the Galaxy's search algorithm is
+            powered by the Infinite Improbability Drive, results may vary wildly
+            across parallel universes.
+          </p>
         </div>
       </section>
     </main>
@@ -45,10 +54,10 @@ const query = Astro.url.searchParams.get('q') || '';
 </Layout>
 
 <script>
-  const form = document.getElementById('search-form') as HTMLFormElement;
-  const loading = document.getElementById('loading');
-  const results = document.getElementById('results');
-  const error = document.getElementById('error');
+  const form = document.getElementById("search-form") as HTMLFormElement;
+  const loading = document.getElementById("loading");
+  const results = document.getElementById("results");
+  const error = document.getElementById("error");
   const input = form?.querySelector('input[name="q"]') as HTMLInputElement;
 
   // Show initial results if we have a query
@@ -56,14 +65,14 @@ const query = Astro.url.searchParams.get('q') || '';
     performSearch(input.value);
   }
 
-  form?.addEventListener('submit', (e) => {
+  form?.addEventListener("submit", (e) => {
     e.preventDefault();
-    const query = input?.value || '';
-    
+    const query = input?.value || "";
+
     // Update URL without reloading
     const url = new URL(window.location.href);
-    url.searchParams.set('q', query);
-    window.history.pushState({}, '', url);
+    url.searchParams.set("q", query);
+    window.history.pushState({}, "", url);
 
     performSearch(query);
   });
@@ -72,35 +81,41 @@ const query = Astro.url.searchParams.get('q') || '';
     if (!loading || !results || !error) return;
 
     // Reset state
-    results.classList.add('hidden');
-    error.classList.add('hidden');
-    
+    results.classList.add("hidden");
+    error.classList.add("hidden");
+
     if (!query.trim()) {
-      loading.classList.add('hidden');
+      loading.classList.add("hidden");
       return;
     }
 
     // Show loading
-    loading.classList.remove('hidden');
+    loading.classList.remove("hidden");
 
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(query)}`
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      const data = await response.json();
-      
+
+      const data = (await response.json()) as {
+        content?: string;
+        error?: string;
+      };
+
       if (data.error) throw new Error(data.error);
-      
+      if (!data.content) throw new Error("No content received");
+
       results.innerHTML = data.content;
-      results.classList.remove('hidden');
-      loading.classList.add('hidden');
+      results.classList.remove("hidden");
+      loading.classList.add("hidden");
     } catch (e) {
-      console.error('Error performing search:', e);
-      error.classList.remove('hidden');
-      loading.classList.add('hidden');
+      console.error("Error performing search:", e);
+      error.classList.remove("hidden");
+      loading.classList.add("hidden");
     }
   }
 </script>
@@ -144,9 +159,15 @@ const query = Astro.url.searchParams.get('q') || '';
   }
 
   @keyframes pulse {
-    0% { text-shadow: 0 0 20px var(--guide-green); }
-    50% { text-shadow: 0 0 40px var(--guide-green); }
-    100% { text-shadow: 0 0 20px var(--guide-green); }
+    0% {
+      text-shadow: 0 0 20px var(--guide-green);
+    }
+    50% {
+      text-shadow: 0 0 40px var(--guide-green);
+    }
+    100% {
+      text-shadow: 0 0 20px var(--guide-green);
+    }
   }
 
   .search-container {
@@ -167,7 +188,7 @@ const query = Astro.url.searchParams.get('q') || '';
     border-radius: 4px;
     padding: 0.8rem 1rem;
     color: var(--guide-green);
-    font-family: 'Share Tech Mono', monospace;
+    font-family: "Share Tech Mono", monospace;
     font-size: 1rem;
   }
 
@@ -182,7 +203,7 @@ const query = Astro.url.searchParams.get('q') || '';
     border-radius: 4px;
     padding: 0.8rem 1.5rem;
     color: #000;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: "Share Tech Mono", monospace;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s;
@@ -221,8 +242,13 @@ const query = Astro.url.searchParams.get('q') || '';
   }
 
   @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
   }
 
   .blink {
