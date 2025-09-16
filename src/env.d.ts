@@ -3,6 +3,7 @@ type ENV = {
   TOKEN_USAGE: KVNamespace;
   ARTICLES: KVNamespace;
   SEARCHES: KVNamespace;
+  INDICES: KVNamespace;
   OPENAI_API_KEY: string;
 };
 type Runtime = import("@astrojs/cloudflare").Runtime<ENV>;
