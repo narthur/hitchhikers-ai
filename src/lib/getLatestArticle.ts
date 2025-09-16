@@ -1,13 +1,17 @@
 import { marked } from "marked";
+import { getIndex } from "./indices";
 
-export async function getLatestArticle(articles: KVNamespace | undefined) {
-  if (!articles) return null;
+export async function getLatestArticle(
+  articles: KVNamespace | undefined,
+  indices: KVNamespace | undefined
+): Promise<{ text: string; path: string } | null> {
+  if (!articles || !indices) return null;
 
-  const keys = await articles.list();
+  const keys = await getIndex(articles, "articles", indices);
 
-  if (keys.keys.length === 0) return null;
+  if (keys.length === 0) return null;
 
-  const sortedKeys = keys.keys.sort((a: any, b: any) => {
+  const sortedKeys = keys.sort((a: any, b: any) => {
     const aTime = a.metadata?.uploaded || 0;
     const bTime = b.metadata?.uploaded || 0;
     return bTime - aTime;

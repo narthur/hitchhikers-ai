@@ -1,3 +1,4 @@
+import { updateIndex } from "./indices";
 import { LIMIT_EXCEEDED_MESSAGE, RateLimitedOpenAI } from "./openai";
 import { marked } from "marked";
 
@@ -91,8 +92,9 @@ async function getArticleImage(
 export async function getArticle(
   apiKey: string,
   tokenUsage: any,
-  articles: any,
-  urlPath: string
+  articles: KVNamespace,
+  urlPath: string,
+  indices: KVNamespace
 ) {
   const openai = new RateLimitedOpenAI(apiKey, tokenUsage);
   const isSafe = await openai.isSafe(urlPath);
@@ -129,6 +131,8 @@ export async function getArticle(
     }
 
     await articles.put(urlPath || "404", guideEntry);
+    await updateIndex(articles, "articles", indices);
+
     return marked(guideEntry);
   } catch (error) {
     console.error("Error generating article:", error);

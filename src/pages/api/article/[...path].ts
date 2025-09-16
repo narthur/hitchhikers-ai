@@ -6,8 +6,10 @@ export const prerender = false;
 export async function GET({ params, locals }: APIContext) {
   try {
     const articles = locals.runtime?.env?.ARTICLES;
-    if (!articles) {
-      throw new Error("Article storage not available");
+    const indices = locals.runtime?.env?.INDICES;
+
+    if (!articles || !indices) {
+      throw new Error("Article or index storage not available");
     }
 
     // Log the incoming path for debugging
@@ -23,7 +25,8 @@ export async function GET({ params, locals }: APIContext) {
       locals.runtime.env.OPENAI_API_KEY,
       locals.runtime.env.TOKEN_USAGE,
       articles,
-      articlePath || "404"
+      articlePath || "404",
+      indices
     );
 
     if (!content) {

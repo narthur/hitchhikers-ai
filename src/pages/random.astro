@@ -1,14 +1,18 @@
 ---
+import { getRandomKeys } from "../lib/getRandomKeys";
+
 export const prerender = false;
 
 try {
   const articles = Astro.locals.runtime?.env?.ARTICLES;
   if (articles) {
-    // Get all article keys and redirect to a random one
-    const keys = await articles.list();
-    const randomKey = keys.keys[Math.floor(Math.random() * keys.keys.length)];
+    const randomKey = await getRandomKeys({
+      kv: articles,
+      indexKey: "articles",
+      indices: Astro.locals.runtime?.env?.INDICES,
+      count: 1,
+    }).then((keys) => keys[0]);
 
-    // If we have articles, redirect to a random one, otherwise go to home
     if (randomKey?.name) {
       return Astro.redirect(`/${randomKey.name}`);
     }

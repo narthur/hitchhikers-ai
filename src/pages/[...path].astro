@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { getRandomKeys } from "../lib/getRandomKeys";
 
 const { path } = Astro.params;
 const formattedPath = path?.replace(/[/-]/g, " ").trim() || "404";
@@ -8,14 +9,17 @@ const formattedPath = path?.replace(/[/-]/g, " ").trim() || "404";
 let recommendations: { path: string; title: string }[] = [];
 try {
   const articles = Astro.locals.runtime?.env?.ARTICLES;
-  if (articles) {
-    const keys: { keys: { name: string }[] } = await articles.list();
-    const shuffled = keys.keys
-      .filter((key) => key.name !== path) // Don't recommend current article
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 4);
+  const indices = Astro.locals.runtime?.env?.INDICES;
+  if (articles && indices) {
+    const keys = await getRandomKeys({
+      kv: articles,
+      indexKey: "articles",
+      indices,
+      count: 3,
+      excludedKeys: [path || ""],
+    });
 
-    recommendations = shuffled.map((key) => ({
+    recommendations = keys.map((key) => ({
       path: key.name,
       title: key.name.replace(/[/-]/g, " ").trim(),
     }));
