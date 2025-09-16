@@ -89,6 +89,20 @@ async function getArticleImage(
   }
 }
 
+/**
+ * Retrieve (from cache) or generate a Hitchhiker's Guide–style article for a given URL path, cache it, update the indices, and return the article rendered as HTML.
+ *
+ * This function:
+ * - Validates the topic is safe for work and throws Error("This topic is not safe for work.") if not.
+ * - Normalizes `urlPath` into a human-friendly `formattedPath`.
+ * - Returns a cached HTML article if present.
+ * - If not cached, enforces usage limits and returns a limit message when exceeded.
+ * - Generates article text and an optional image, prefixes the image to the article when produced, stores the result in `articles`, updates the index via `indices`, and returns the article HTML.
+ *
+ * @param urlPath - The requested path (e.g., "/some-topic"); used to look up and name the article. An empty or missing `urlPath` is treated as "404".
+ * @returns The article as HTML (marked output).
+ * @throws Error when the topic is deemed unsafe for work. Other errors encountered during generation are propagated to the caller.
+ */
 export async function getArticle(
   apiKey: string,
   tokenUsage: any,
