@@ -1,8 +1,9 @@
 import { getArticle } from "../../../lib/getArticle";
+import type { APIContext } from "astro";
 
 export const prerender = false;
 
-export async function GET({ params, locals }: any) {
+export async function GET({ params, locals }: APIContext) {
   try {
     const articles = locals.runtime?.env?.ARTICLES;
     if (!articles) {

@@ -38,8 +38,7 @@ async function getArticleText(
 
 async function getArticleImage(
   openai: RateLimitedOpenAI,
-  formattedPath: string,
-  articleText: string
+  formattedPath: string
 ): Promise<string | null> {
   try {
     if (await openai.didExceedImageLimit()) {
@@ -118,7 +117,7 @@ export async function getArticle(
     let guideEntry = text;
 
     try {
-      const image = await getArticleImage(openai, formattedPath, text);
+      const image = await getArticleImage(openai, formattedPath);
       if (image) {
         guideEntry = `${image}\n\n${text}`;
       }

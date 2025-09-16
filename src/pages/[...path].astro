@@ -1,27 +1,27 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 
 const { path } = Astro.params;
-const formattedPath = path?.replace(/[/-]/g, ' ').trim() || '404';
+const formattedPath = path?.replace(/[/-]/g, " ").trim() || "404";
 
 // Get 3 random articles for recommendations
 let recommendations: { path: string; title: string }[] = [];
 try {
   const articles = Astro.locals.runtime?.env?.ARTICLES;
   if (articles) {
-    const keys: {keys: {name: string}[]} = await articles.list();
+    const keys: { keys: { name: string }[] } = await articles.list();
     const shuffled = keys.keys
-      .filter(key => key.name !== path) // Don't recommend current article
+      .filter((key) => key.name !== path) // Don't recommend current article
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
 
-    recommendations = shuffled.map(key => ({
+    recommendations = shuffled.map((key) => ({
       path: key.name,
       title: key.name.replace(/[/-]/g, " ").trim(),
     }));
   }
 } catch (error) {
-  console.error('Error fetching recommendations:', error);
+  console.error("Error fetching recommendations:", error);
 }
 ---
 
@@ -29,35 +29,48 @@ try {
   <div id="container">
     <main>
       <section id="hero">
-        <div class="article-id">Guide Entry #{Math.floor(Math.random() * 900000) + 100000}-{['alpha', 'beta', 'gamma', 'delta', 'epsilon'][Math.floor(Math.random() * 5)]}</div>
+        <div class="article-id">
+          Guide Entry #{Math.floor(Math.random() * 900000) + 100000}-{
+            ["alpha", "beta", "gamma", "delta", "epsilon"][
+              Math.floor(Math.random() * 5)
+            ]
+          }
+        </div>
         <h1 class="article-title">{formattedPath}</h1>
         <div class="guide-entry">
           <div id="loading" class="loading">
             <div class="loading-text">
               <span class="blink">&gt;</span> Computing improbabilities...
             </div>
-            <div class="loading-subtext">Please wait while the Guide consults its quantum processors</div>
+            <div class="loading-subtext">
+              Please wait while the Guide consults its quantum processors
+            </div>
           </div>
           <div id="content" class="guide-text hidden"></div>
           <div id="error" class="error hidden">
-            <p>The Guide seems to be experiencing technical difficulties. Please try again later.</p>
+            <p>
+              The Guide seems to be experiencing technical difficulties. Please
+              try again later.
+            </p>
             <p class="note">Error Code: IMPROBABILITY_OVERFLOW</p>
           </div>
         </div>
 
-        {recommendations.length > 0 && (
-          <div class="recommendations">
-            <h2>Other Improbable Entries</h2>
-            <div class="recommendation-grid">
-              {recommendations.map(rec => (
-                <a href={`/${rec.path}`} class="recommendation">
-                  <span class="blink">&gt;</span>
-                  {rec.title}
-                </a>
-              ))}
+        {
+          recommendations.length > 0 && (
+            <div class="recommendations">
+              <h2>Other Improbable Entries</h2>
+              <div class="recommendation-grid">
+                {recommendations.map((rec) => (
+                  <a href={`/${rec.path}`} class="recommendation">
+                    <span class="blink">&gt;</span>
+                    {rec.title}
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
         <section id="links">
           <a class="button" href="/">Return to Earth</a>
@@ -69,38 +82,41 @@ try {
 
 <script>
   async function loadArticle() {
-    const content = document.getElementById('content');
-    const loading = document.getElementById('loading');
-    const error = document.getElementById('error');
-    
+    const content = document.getElementById("content");
+    const loading = document.getElementById("loading");
+    const error = document.getElementById("error");
+
     if (!content || !loading || !error) return;
-    
+
     try {
       const path = window.location.pathname;
-      console.log('Fetching article for path:', path);
-      
+      console.log("Fetching article for path:", path);
+
       const response = await fetch(`/api/article${path}`);
-      console.log('Response status:', response.status);
-      
+      console.log("Response status:", response.status);
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
+        console.error("Error response:", errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      const data = await response.json();
-      console.log('Received data:', data);
-      
+
+      const data = (await response.json()) as {
+        content?: string;
+        error?: string;
+      };
+      console.log("Received data:", data);
+
       if (data.error) throw new Error(data.error);
-      if (!data.content) throw new Error('No content received');
-      
+      if (!data.content) throw new Error("No content received");
+
       content.innerHTML = data.content;
-      content.classList.remove('hidden');
-      loading.classList.add('hidden');
+      content.classList.remove("hidden");
+      loading.classList.add("hidden");
     } catch (e) {
-      console.error('Error loading article:', e);
-      error.classList.remove('hidden');
-      loading.classList.add('hidden');
+      console.error("Error loading article:", e);
+      error.classList.remove("hidden");
+      loading.classList.add("hidden");
     }
   }
 
@@ -132,7 +148,7 @@ try {
   }
 
   .article-id {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: "Share Tech Mono", monospace;
     color: var(--guide-green);
     opacity: 0.8;
     font-size: 1rem;
@@ -158,14 +174,25 @@ try {
   }
 
   @keyframes pulse {
-    0% { text-shadow: 0 0 20px var(--guide-green); }
-    50% { text-shadow: 0 0 40px var(--guide-green); }
-    100% { text-shadow: 0 0 20px var(--guide-green); }
+    0% {
+      text-shadow: 0 0 20px var(--guide-green);
+    }
+    50% {
+      text-shadow: 0 0 40px var(--guide-green);
+    }
+    100% {
+      text-shadow: 0 0 20px var(--guide-green);
+    }
   }
 
   @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
   }
 
   .blink {
@@ -236,7 +263,7 @@ try {
   }
 
   .guide-text :global(a::after) {
-    content: '↗';
+    content: "↗";
     display: inline-block;
     margin-left: 0.2em;
     font-size: 0.8em;
@@ -340,7 +367,8 @@ try {
       font-size: 2rem;
     }
 
-    .guide-entry, .recommendations {
+    .guide-entry,
+    .recommendations {
       margin: 0 1rem;
       width: calc(100% - 2rem);
     }

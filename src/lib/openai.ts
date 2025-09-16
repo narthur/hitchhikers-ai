@@ -1,5 +1,4 @@
 import OpenAI from "openai";
-import type { KVNamespace } from "@cloudflare/workers-types";
 
 interface DailyUsage {
   totalTokens: number;
@@ -147,7 +146,7 @@ export class RateLimitedOpenAI {
       // Update usage to count the image generation
       await this.updateUsage(today, 0, true);
 
-      return completion.data[0].b64_json;
+      return completion.data?.[0].b64_json;
     } catch (error) {
       console.error("Image generation error:", error);
       return null;
